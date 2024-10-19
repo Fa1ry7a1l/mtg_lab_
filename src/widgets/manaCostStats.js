@@ -3,6 +3,7 @@ class ManaCostStats {
     constructor() {
     }
     buildStats(element){
+        element.innerHTML = ""
         const data = [
             { cost: 0, count: 2 },
             { cost: 1, count: 8 },

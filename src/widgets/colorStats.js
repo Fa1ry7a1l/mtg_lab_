@@ -5,6 +5,7 @@ class ColorStats {
     }
 
     buildStats(element){
+        element.innerHTML = ""
         const data = [
             { color: 'White', count: 15 },
             { color: 'Blue', count: 12 },
