@@ -1,26 +1,36 @@
 import * as d3 from "d3";
 class ManaCostStats {
-    constructor() {
+    constructor(deck) {
+        this.deck = deck
     }
     buildStats(element){
         element.innerHTML = ""
-        const data = [
-            { cost: 0, count: 2 },
-            { cost: 1, count: 8 },
-            { cost: 2, count: 12 },
-            { cost: 3, count: 15 },
-            { cost: 4, count: 10 },
-            { cost: 5, count: 6 },
-            { cost: 6, count: 4 },
-            { cost: '7+', count: 3 }
+
+        let data = [
+            { cost: 0, count: 0 },
+            { cost: 1, count: 0 },
+            { cost: 2, count: 0 },
+            { cost: 3, count: 0 },
+            { cost: 4, count: 0 },
+            { cost: 5, count: 0 },
+            { cost: 6, count: 0 },
+            { cost: '7+', count: 0 }
         ];
 
+        console.log(this.deck);
+
+        for (const [_, card] of this.deck) {
+            const cmc = card.data.cmc;
+            if (cmc >= 7) {
+                data[7].count += card.count;
+            } else {
+                data[cmc].count += card.count;
+            }
+        }
+
         const margin = { top: 30, right: 30, bottom: 70, left: 60 };
-        const width = 460 - margin.left - margin.right;
+        const width = 300 - margin.left - margin.right;
         const height = 400 - margin.top - margin.bottom;
-
-
-
 
         const svg = d3.select(element)
             .append("svg")
@@ -42,7 +52,7 @@ class ManaCostStats {
             .style("text-anchor", "end");
 
         const y = d3.scaleLinear()
-            .domain([0, d3.max(data, d => d.count)])
+            .domain([0, d3.max(data, d => d.count)]) // Убедитесь, что здесь 0 внизу
             .range([height, 0]);
 
         svg.append("g")
@@ -53,14 +63,14 @@ class ManaCostStats {
             .enter()
             .append("rect")
             .attr("x", d => x(d.cost))
-            .attr("y", d => y(d.count))
+            .attr("y", d => d.count > 0 ? y(d.count) : height) // Обеспечивает, что столбцы с 0 будут внизу
             .attr("width", x.bandwidth())
-            .attr("height", d => height - y(d.count))
+            .attr("height", d => d.count > 0 ? height - y(d.count) : 0) // Высота 0 для count 0
             .attr("fill", "#69b3a2");
 
         svg.append("text")
             .attr("text-anchor", "middle")
-            .attr("x", width / 2)
+            .attr("x", width / 2.5)
             .attr("y", -margin.top / 2)
             .text("MTG Deck Mana Cost Distribution");
 

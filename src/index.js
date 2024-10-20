@@ -2,8 +2,8 @@ import {Mtg} from "./api/mtg";
 import {ColorStats} from "./widgets/colorStats";
 import {ManaCostStats} from "./widgets/manaCostStats";
 
-let deck = []
-let displayedCard = null
+let deck = new Map();
+let selectedCard = null
 
 document.addEventListener("DOMContentLoaded", setup)
 
@@ -16,38 +16,51 @@ function setup() {
     const deckContainer = document.getElementById('deck-container');
     const deckCountElement = document.getElementById('deck-count');
     addToDeckButton.addEventListener('click', () => {
-        if (deck[displayedCard.id]) {
-            deck[displayedCard.id].count++;
+        const card = deck.get(selectedCard.id)
+        if (card !== undefined) {
+            if (card.data.types.includes('Land'))
+                card.count++;
+            else{
+                card.count = Math.min(++card.count, 4)
+            }
         } else {
-            deck[displayedCard.id] = {
-                card: displayedCard,
-                count: 1
-            };
+            deck.set(selectedCard.id,  {
+                data: selectedCard,
+                count: 1,
+            });
         }
         redrawDeckAndStats()
     });
 
     const mtg = new Mtg();
+
+    function addCard(card, list) {
+        if (card.imageUrl !== undefined) {
+            const listItem = document.createElement('li');
+            listItem.innerHTML = card.name;
+            listItem.addEventListener('dblclick', () => {
+                showCard(card);
+            });
+            list.appendChild(listItem)
+        }
+    }
+
+    function addCards(cards) {
+        const menu = document.getElementById('listContainer');
+        const list = document.createElement('ul');
+
+        cards.forEach(card => {
+            addCard(card, list);
+        })
+        menu.innerHTML = ''
+
+        menu.appendChild(list);
+    }
+
     mtg.loadCards()
         .then((cards) => {
-            const menu = document.getElementById('listContainer');
-            const list = document.createElement('ul');
-
-            cards.forEach(card => {
-                const listItem = document.createElement('li');
-                listItem.innerHTML = card.name;
-                listItem.addEventListener('dblclick', () => {
-                    showCard(card);
-                });
-                list.appendChild(listItem)
-            })
-            menu.innerHTML = ''
-
-            menu.appendChild(list);
-
-
+            addCards(cards);
             redrawDeckAndStats()
-
         })
 
     document.getElementById('search-input').addEventListener('keydown', function (event) {
@@ -63,26 +76,16 @@ function setup() {
     function executeSearch() {
         const query = document.getElementById('search-input').value;
         if (query.trim()) {
-            mtg.findCards(query).then((searchResult) => {
-                const menu = document.getElementById('listContainer');
-                const list = document.createElement('ul');
-
-                searchResult.forEach(card => {
-                    const listItem = document.createElement('li');
-                    listItem.innerHTML = card.name;
-                    listItem.addEventListener('dblclick', () => {
-                        showCard(card);
-                    });
-                    list.appendChild(listItem)
-                })
-                menu.innerHTML = ''
-
+            const list = document.createElement('ul');
+            mtg.findCards(query).then((cards) => {
+                addCards(cards);
                 menu.appendChild(list);
-
             })
-
         } else {
-            alert('Please enter a search query.');
+            mtg.loadCards()
+                .then((cards) => {
+                    addCards(cards);
+                })
         }
     }
 
@@ -91,18 +94,21 @@ function setup() {
 
         let totalCount = 0;
 
-        for (const cardId in deck) {
-            const deckCard = deck[cardId];
-            totalCount += deckCard.count;
+        for (const [key, card] of deck) {
+            totalCount += card.count;
 
             const deckCardElement = document.createElement('div');
             deckCardElement.classList.add('deck-card');
 
+            deckCardElement.addEventListener('dblclick', () => {
+                removeCard(key);
+            });
+
             const img = document.createElement('img');
-            img.src = deckCard.card.imageUrl;
+            img.src = card.data.imageUrl;
 
             const count = document.createElement('span');
-            count.innerText = `x${deckCard.count}`;
+            count.innerText = `x${card.count}`;
 
             deckCardElement.appendChild(img);
             deckCardElement.appendChild(count);
@@ -113,16 +119,25 @@ function setup() {
         deckCountElement.innerText = totalCount;
     }
 
+    function removeCard(id) {
+        const card = deck.get(id)
+        card.count--;
+        if (card.count === 0){
+            deck.delete(id);
+        }
+        redrawDeckAndStats()
+    }
+
     function showCard(card) {
-        displayedCard = card
+        selectedCard = card
         cardImage.src = card.imageUrl
         cardDisplay.removeAttribute('hidden')
         cardDescription.innerHTML = card.text
     }
 
     function redrawDeckAndStats() {
-        new ColorStats().buildStats(document.getElementById("colorStats"));
-        new ManaCostStats().buildStats(document.getElementById("manaStats"));
+        new ColorStats(deck).buildStats(document.getElementById("colorStats"));
+        new ManaCostStats(deck).buildStats(document.getElementById("manaStats"));
         updateDeck()
     }
 }
