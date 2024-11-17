@@ -1,43 +1,20 @@
+import {useEffect, useRef} from "react";
 import * as d3 from "d3";
-const map = {
-    "W":  0,
-    "U":  1,
-    "B":  2,
-    "R":  3,
-    "G":  4,
-};
 
-class ColorStats {
-
-    constructor(deck) {
-        this.deck = deck
-    }
-
-    buildStats(element){
-        element.innerHTML = ""
+function ColorStats() {
+    const svgRef =  useRef(null);
+    useEffect(() => {
+        // TODO Data should not be here
         const data = [
-            { color: 'White', count: 0 },
-            { color: 'Blue', count: 0 },
-            { color: 'Black', count: 0 },
-            { color: 'Red', count: 0 },
-            { color: 'Green', count: 0 },
-            { color: 'Colorless', count: 0 }
+            { color: 'White', count: 15 },
+            { color: 'Blue', count: 12 },
+            { color: 'Black', count: 8 },
+            { color: 'Red', count: 10 },
+            { color: 'Green', count: 18 },
+            { color: 'Colorless', count: 7 }
         ];
-
-
-
-        for (const [_, card] of this.deck){
-            console.log(card)
-            const colors = card.data.colors;
-            if (colors !== undefined)
-            {
-                colors.forEach(color => {
-                    var index = map[color] !== undefined ? map[color] : 5;
-                    data[index].count += card.count;
-                });
-            }
-        }
-
+        const element = svgRef.current;
+        element.innerHTML = '';
         const width = 200;
         const height = 200;
         const radius = Math.min(width, height) / 2;
@@ -57,6 +34,7 @@ class ColorStats {
         label.textContent = "Deck Mana Color Distribution";
         label.classList.add("colorLabel");
         element.appendChild(label)
+
         const svg = d3.select(element)
             .append("svg")
             .attr("width", width)
@@ -74,7 +52,9 @@ class ColorStats {
             .attr("d", arc)
             .attr("fill", d => color(d.data.color));
 
-    }
+    }, []);
+    return <div id="colorStats" ref={svgRef}>
 
+    </div>
 }
-export { ColorStats };
+export {ColorStats}
