@@ -5,8 +5,17 @@ class Mtg {
     }
 
     loadCards(){
-        return fetch(`${this.baseUrl}cards`)
-            .then(response=>response.json())
+        return this.toJson(fetch(`${this.baseUrl}cards`))
+    }
+
+    findCards(name){
+        return this.toJson(fetch(`${this.baseUrl}cards/?${new URLSearchParams({
+            name: name
+        }).toString()}`))
+    }
+
+    toJson (prom){
+        return prom.then(response=>response.json())
             .then(json=>json.cards)
     }
 }

@@ -1,18 +1,51 @@
-import {useEffect, useRef} from "react";
+import {useEffect, useRef, useState} from "react";
 import * as d3 from "d3";
 
-function ColorStats() {
-    const svgRef =  useRef(null);
+const map = {
+    "W":  0,
+    "U":  1,
+    "B":  2,
+    "R":  3,
+    "G":  4,
+};
+
+function ColorStats({deck}) {
+    const svgRef = useRef(null);
+    const [data, setData] = useState([
+        {color: 'White', count: 0},
+        {color: 'Blue', count: 0},
+        {color: 'Black', count: 0},
+        {color: 'Red', count: 0},
+        {color: 'Green', count: 0},
+        {color: 'Colorless', count: 0}
+    ]);
+
     useEffect(() => {
-        // TODO Data should not be here
-        const data = [
-            { color: 'White', count: 15 },
-            { color: 'Blue', count: 12 },
-            { color: 'Black', count: 8 },
-            { color: 'Red', count: 10 },
-            { color: 'Green', count: 18 },
-            { color: 'Colorless', count: 7 }
+        const tempData = [
+            {color: 'White', count: 0},
+            {color: 'Blue', count: 0},
+            {color: 'Black', count: 0},
+            {color: 'Red', count: 0},
+            {color: 'Green', count: 0},
+            {color: 'Colorless', count: 0}
         ];
+
+
+        for (const [_, card] of deck) {
+            const colors = card.data.colors;
+            if (colors !== undefined) {
+                colors.forEach(color => {
+                    var index = map[color] !== undefined ? map[color] : 5;
+                    tempData[index].count += card.count;
+                });
+            }
+        }
+        setData(tempData);
+    }, [deck]);
+
+
+    useEffect(() => {
+
         const element = svgRef.current;
         element.innerHTML = '';
         const width = 200;
@@ -52,9 +85,10 @@ function ColorStats() {
             .attr("d", arc)
             .attr("fill", d => color(d.data.color));
 
-    }, []);
+    }, [data]);
     return <div id="colorStats" ref={svgRef}>
 
     </div>
 }
+
 export {ColorStats}

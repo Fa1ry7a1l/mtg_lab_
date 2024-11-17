@@ -1,4 +1,4 @@
-function DeckPanel() {
+function DeckPanel({deck}) {
    return <div className="content">
         <div id="cardsContainer">
             <h1 className='contentHeader'>
