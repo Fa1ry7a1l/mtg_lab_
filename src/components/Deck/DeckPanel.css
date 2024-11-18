@@ -1,0 +1,26 @@
+.deck-cards {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+}
+
+.deck-card {
+    position: relative;
+    margin: 5px;
+}
+
+.small-card {
+    width: 100px;
+    height: auto;
+    display: block;
+}
+
+.card-count {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 2px 5px;
+    border-radius: 3px;
+}

@@ -2,7 +2,7 @@ import './App.css'
 import {useCallback, useEffect, useState} from "react";
 import {debounce} from "lodash";
 import {CardList} from "./components/CardList.jsx";
-import {DeckPanel} from "./components/DeckPanel.jsx";
+import {DeckPanel} from "./components/Deck/DeckPanel.jsx";
 import {StatisticsPanel} from "./components/StatisticsPanel.jsx";
 import {Mtg} from "./api/mtg.js";
 
@@ -10,7 +10,8 @@ function App() {
     const [input, setInput] = useState("");
     const [deck, setDeck] = useState(new Map());
     const [searchList, setSearchList] = useState([]);
-
+    const [selectedCard, setSelectedCard] = useState(null);
+    
     const mtg = new Mtg();
 
 
@@ -51,25 +52,13 @@ function App() {
         console.log(input);
     };
 
-    const addCardToDeck = (addedCard) =>
-    {
-        setDeck(prevState => {
-            const card = prevState.get(addedCard.id)
-            if (card !== undefined) {
-                if (card.data.types.includes('Land'))
-                    card.count++;
-                else{
-                    card.count = Math.min(++card.count, 4)
-                }
-            } else {
-                prevState.set(addedCard.id,  {
-                    data: addedCard,
-                    count: 1,
-                });
-            }
-            return new Map(prevState);
-        });
-    }
+    const handleSelectCard = (card) => {
+        setSelectedCard(card);
+    };
+
+    const handleDeckUpdate = (updateFunction) => {
+        setDeck(prevDeck => updateFunction(prevDeck));
+    };
 
     return (
         <>
@@ -77,11 +66,11 @@ function App() {
                 <h1>MTG Deck Builder</h1>
             </header>
             <main className="main">
-                <CardList searchList={searchList} selectCallback={addCardToDeck}/>
+                <CardList searchList={searchList} selectCallback={handleSelectCard}/>
                 <form onSubmit={handleSubmit}>
                     <input type="text" value={input} onChange={handleInputChange}/>
                 </form>
-                <DeckPanel deck={deck}/>
+                <DeckPanel selectedCard={selectedCard} deck={deck} onDeckUpdate={handleDeckUpdate} />
                 <StatisticsPanel deck={deck}/>
             </main>
         </>
